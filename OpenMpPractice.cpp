@@ -24,22 +24,10 @@ int main()
     {
         int thread_number = omp_get_thread_num();
 
-        if (thread_amt > N)
+#pragma omp for 
+        for (int i = 1; i < N + 1; ++i)
         {
-            thread_amt = N;
-        }
-
-        if (thread_number < N)
-        {
-            int part = N / thread_amt;
-
-            int start = part * thread_number + 1;
-            int end = part * (thread_number + 1) + 1;
-
-            for (int i = start; i < end; ++i)
-            {
-                total_sum += i;
-            }
+            total_sum += i;
         }
 
         std::cout << std::format("[{}]: Sum = {}\n", thread_number, total_sum);
