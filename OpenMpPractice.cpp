@@ -5,36 +5,43 @@
 
 int main()
 {
-    int total_sum = 0, N;
+    int total_sum = 0, N, thread_amt;
+
+    std::cout << "Enter k: ";
+    std::cin >> thread_amt;
 
     std::cout << "Enter N: ";
     std::cin >> N;
 
-    if (N < 0)
+
+    if (N < 0 || thread_amt < 1)
     {
-        std::cout << "N must be non-negative.\n";
+        std::cout << "N must be non-negative, k must be at least 1.\n";
         exit(-1);
     }
 
-#pragma omp parallel num_threads(2) reduction(+:total_sum)
+#pragma omp parallel num_threads(thread_amt) reduction(+:total_sum)
     {
         int thread_number = omp_get_thread_num();
-        int start, end;
-        if (thread_number)
+
+        if (thread_amt > N)
         {
-            start = 0;
-            end = N / 2;
-        }
-        else
-        {
-            start = N / 2 + 1;
-            end = N;
+            thread_amt = N;
         }
 
-        for (int i = start; i < end + 1; ++i)
+        if (thread_number < N)
         {
-            total_sum += i;
+            int part = N / thread_amt;
+
+            int start = part * thread_number + 1;
+            int end = part * (thread_number + 1) + 1;
+
+            for (int i = start; i < end; ++i)
+            {
+                total_sum += i;
+            }
         }
+
         std::cout << std::format("[{}]: Sum = {}\n", thread_number, total_sum);
     }
 
