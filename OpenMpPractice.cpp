@@ -18,7 +18,11 @@ int main()
 
 #pragma omp parallel num_threads(num_threads)
     {
-        std::cout << std::format("I am thread {} from {} threads!\n", omp_get_thread_num(), omp_get_num_threads());
+        int thread_number = omp_get_thread_num();
+        if (!(thread_number % 2))
+        {
+            std::cout << std::format("I am thread {} from {} threads!\n", omp_get_thread_num(), omp_get_num_threads());
+        }
     }
 
     return 0;
