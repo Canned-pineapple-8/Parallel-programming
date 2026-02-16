@@ -5,40 +5,36 @@
 
 int main()
 {
-    int total_sum = 0, N, thread_amt;
+    double pi = 0;
+    int N, thread_amt;
 
-    /*
     std::cout << "Enter k: ";
     std::cin >> thread_amt;
 
     std::cout << "Enter N: ";
     std::cin >> N;
 
-
-    if (N < 0 || thread_amt < 1)
+    if (N < 1 || thread_amt < 1)
     {
-        std::cout << "N must be non-negative, k must be at least 1.\n";
+        std::cout << "N and k must be at least 1.\n";
         exit(-1);
     }
-    */
-    N = 10; thread_amt = 4;
 
-#pragma omp parallel num_threads(thread_amt) reduction(+:total_sum)
+
+#pragma omp parallel num_threads(thread_amt) reduction(+:pi)
     {
         int thread_number = omp_get_thread_num();
 
-#pragma omp for schedule(guided, 2)
-        for (int i = 1; i < N + 1; ++i)
+#pragma omp for schedule(guided)
+        for (int i = 0; i < N; ++i)
         {
-            total_sum += i;
-            std::cout << std::format("{}: calculation of the iteration number {}\n", thread_number, i);
-
+            double x = (i + 0.5) / (double)N;
+            pi += 4 / ((double)N * (1 + x * x));
         }
 
-        std::cout << std::format("[{}]: Sum = {}\n", thread_number, total_sum);
     }
 
-    std::cout << std::format("Sum = {}\n", total_sum);
+    std::cout << std::format("PI = {}\n", pi);
 
     return 0;
 }
