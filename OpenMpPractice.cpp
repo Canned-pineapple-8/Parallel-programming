@@ -2,36 +2,55 @@
 #include <omp.h>
 #include <format>
 
+int read_value(int& val)
+{
+    if (!(std::cin >> val))
+    {
+        std::cout << "Invalid input.";
+        return 0;
+    }
+    return 1;
+}
+
+int read_var(int& var, std::string var_name, int lower_bound = 1, int upper_bound = 1000)
+{
+    std::cout << std::format("Enter {}: ", var_name);
+    if (!read_value(var))
+    {
+        return 0;
+    }
+
+    if (var < lower_bound || var > upper_bound)
+    {
+        std::cout << std::format("Value {} must be between {} and {}.\n", var_name, lower_bound, upper_bound);
+        return 0;
+    }
+    return 1;
+}
+
+int calc_sum(int N, int threads_num = 2)
+{
+    int total_sum = 0;
+
+#pragma omp parallel for num_threads(threads_num)
+    for (int i = 1; i <= N; ++i)
+    {
+#pragma omp atomic
+        total_sum += i;
+    }
+
+    return total_sum;
+}
 
 int main()
 {
-    int total_sum = 0, N, thread_amt;
+    int N, thread_amt;
 
-    std::cout << "Enter k: ";
-    std::cin >> thread_amt;
-
-    std::cout << "Enter N: ";
-    std::cin >> N;
+    if (!read_var(thread_amt, "threads amount")) return 0;
+    if (!read_var(N, "N")) return 0;
 
 
-    if (N < 0 || thread_amt < 1)
-    {
-        std::cout << "N must be non-negative, k must be at least 1.\n";
-        exit(-1);
-    }
-
-#pragma omp parallel num_threads(thread_amt) reduction(+:total_sum)
-    {
-        int thread_number = omp_get_thread_num();
-
-#pragma omp for 
-        for (int i = 1; i < N + 1; ++i)
-        {
-            total_sum += i;
-        }
-
-        std::cout << std::format("[{}]: Sum = {}\n", thread_number, total_sum);
-    }
+    int total_sum = calc_sum(N, thread_amt);
 
     std::cout << std::format("Sum = {}\n", total_sum);
 
