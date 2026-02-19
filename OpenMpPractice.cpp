@@ -2,37 +2,61 @@
 #include <omp.h>
 #include <format>
 
-
-int main()
+int read_value(int& val)
 {
-    double pi = 0;
-    int N, thread_amt;
-
-    std::cout << "Enter k: ";
-    std::cin >> thread_amt;
-
-    std::cout << "Enter N: ";
-    std::cin >> N;
-
-    if (N < 1 || thread_amt < 1)
+    if (!(std::cin >> val))
     {
-        std::cout << "N and k must be at least 1.\n";
-        exit(-1);
+        std::cout << "Invalid input.";
+        return 0;
+    }
+    return 1;
+}
+
+int read_var(int& var, std::string var_name, int lower_bound = 1, int upper_bound = 1000)
+{
+    std::cout << std::format("Enter {}: ", var_name);
+    if (!read_value(var))
+    {
+        return 0;
     }
 
-
-#pragma omp parallel num_threads(thread_amt) reduction(+:pi)
+    if (var < lower_bound || var > upper_bound)
     {
-        int thread_number = omp_get_thread_num();
+        std::cout << std::format("Value {} must be between {} and {}.\n", var_name, lower_bound, upper_bound);
+        return 0;
+    }
+    return 1;
+}
 
-#pragma omp for schedule(guided)
+double calc_pi(int precision, int thread_amt = 2)
+{
+    int N = precision;
+    double pi = 0;
+
+#pragma omp parallel num_threads(thread_amt)
+    {
+#pragma omp for
         for (int i = 0; i < N; ++i)
         {
             double x = (i + 0.5) / (double)N;
+#pragma omp critical
             pi += 4 / ((double)N * (1 + x * x));
         }
 
     }
+
+    return pi;
+}
+
+int main()
+{
+    double pi = 0;
+    int precision, thread_amt;
+
+    if (!read_var(thread_amt, "thread amount")) return 0;
+    if (!read_var(precision, "precision", 1, 1e9)) return 0;
+
+    pi = calc_pi(precision, thread_amt);
 
     std::cout << std::format("PI = {}\n", pi);
 
