@@ -28,11 +28,10 @@ int read_var(int& var, std::string var_name, int lower_bound = 1, int upper_boun
     return 1;
 }
 
-double calc_pi(int precision, int thread_amt = 2)
+double calc_pi_critical(int N, double& exec_time, int thread_amt = 2)
 {
-    int N = precision;
     double pi = 0;
-
+    double start = omp_get_wtime();
 #pragma omp parallel num_threads(thread_amt)
     {
 #pragma omp for
@@ -44,7 +43,9 @@ double calc_pi(int precision, int thread_amt = 2)
         }
 
     }
-
+    double end = omp_get_wtime();
+    
+    exec_time = end - start;
     return pi;
 }
 
@@ -52,13 +53,15 @@ int main()
 {
     double pi = 0;
     int precision, thread_amt;
+    double exec_time;
 
     if (!read_var(thread_amt, "thread amount")) return 0;
     if (!read_var(precision, "precision", 1, 1e9)) return 0;
 
-    pi = calc_pi(precision, thread_amt);
+    pi = calc_pi(precision, exec_time, thread_amt);
 
     std::cout << std::format("PI = {}\n", pi);
+    std::cout << std::format("Execution time = {}\n", exec_time);
 
     return 0;
 }
