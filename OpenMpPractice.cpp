@@ -2,31 +2,36 @@
 #include <omp.h>
 #include <format>
 
-#define ITERATIONS 20
+#define ITERATIONS 10
 
-int read_value(int& val)
+template<typename T>
+int read_value(T& val)
 {
     if (!(std::cin >> val))
     {
-        std::cout << "Invalid input.";
+        std::cout << "Invalid input.\n";
+        std::cin.clear();
         return 0;
     }
     return 1;
 }
 
-int read_var(int& var, std::string var_name, int lower_bound = 1, int upper_bound = 1000)
+template<typename T>
+int read_var(T& var, std::string name, T lower_bound = (T)0, T upper_bound = T(1e9))
 {
-    std::cout << std::format("Enter {}: ", var_name);
+    std::cout << std::format("Enter {}: ", name);
+
     if (!read_value(var))
-    {
-        return 0;
-    }
+        return false;
 
     if (var < lower_bound || var > upper_bound)
     {
-        std::cout << std::format("Value {} must be between {} and {}.\n", var_name, lower_bound, upper_bound);
+        std::cout << std::format(
+            "Value {} must be between {} and {}.\n",
+            name, lower_bound, upper_bound);
         return 0;
     }
+
     return 1;
 }
 
@@ -80,7 +85,7 @@ int main()
     int precision, thread_amt;
 
     if (!read_var(thread_amt, "thread amount")) return 0;
-    if (!read_var(precision, "precision", 1, 1e9)) return 0;
+    if (!read_var(precision, "precision", 1, int(1e9))) return 0;
 
     double exec_t_reduction = 0, exec_t_critical = 0;
     double exec_t_local = 0;
@@ -91,16 +96,15 @@ int main()
         
         pi = calc_pi_reduction(precision, exec_t_local, thread_amt);
         exec_t_reduction += exec_t_local;
+        std::cout << std::format("\tPI = {}\n", pi);
 
         pi = calc_pi_critical(precision, exec_t_local, thread_amt);
         exec_t_critical += exec_t_local;
+        std::cout << std::format("\tPI = {}\n\n", pi);
     }
     
     exec_t_reduction = exec_t_reduction / ITERATIONS;
     exec_t_critical = exec_t_critical / ITERATIONS;
-
-    std::cout << std::format("PI = {}\n", pi);
-    //std::cout << std::format("Execution time = {}\n", exec_time);
 
     std::cout << std::format("Exec time reduction = {}\n", exec_t_reduction);
     std::cout << std::format("Exec time critical = {}\n", exec_t_critical);
