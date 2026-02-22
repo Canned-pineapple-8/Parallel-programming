@@ -3,10 +3,38 @@
 #include <format>
 #include <string>
 
-int read_value(int&);
+template<typename T>
+int read_value(T& val)
+{
+    if (!(std::cin >> val))
+    {
+        std::cout << "Invalid input.\n";
+        std::cin.clear();
+        return 0;
+    }
+    return 1;
+}
 
+template<typename T>
+int read_var(T& var, std::string name, T lower_bound = (T)0, T upper_bound = T(1e9))
+{
+    std::cout << std::format("Enter {}: ", name);
 
-void matrix_free(int** matrix, int n)
+    if (!read_value(var))
+        return false;
+
+    if (var < lower_bound || var > upper_bound)
+    {
+        std::cout << std::format(
+            "Value {} must be between {} and {}.\n",
+            name, lower_bound, upper_bound);
+        return 0;
+    }
+
+    return 1;
+}
+
+void matrix_free(double** matrix, int n)
 {
     for (int i = 0; i < n; ++i)
         delete[] matrix[i];
@@ -14,18 +42,17 @@ void matrix_free(int** matrix, int n)
     delete[] matrix;
 }
 
-
-int** matrix_init(int n)
+double** matrix_init(int n)
 {
-    int** matrix = new int* [n];
+    double** matrix = new double* [n];
 
     for (int i = 0; i < n; ++i)
-        matrix[i] = new int[n];
+        matrix[i] = new double[n];
 
     return matrix;
 }
 
-int read_matrix(int **a, int n)
+int read_matrix(double**a, int n)
 {
     std::cout << "Enter matrix:\n";
     for (int i = 0; i < n; ++i)
@@ -40,7 +67,7 @@ int read_matrix(int **a, int n)
     return 1;
 }
 
-void print_matrix(int** a, int n)
+void print_matrix(double** a, int n)
 {
     for (int i = 0; i < n; ++i)
     {
@@ -52,35 +79,9 @@ void print_matrix(int** a, int n)
     }
 }
 
-int read_value(int& val)
+void multiply(double** a, double** b, double** c, int n, int threads_num)
 {
-    if (!(std::cin >> val))
-    {
-        std::cout << "Invalid input.";
-        return 0;
-    }
-    return 1;
-}
-
-int read_var(int& var, std::string var_name)
-{
-    std::cout << std::format("Enter {}: ", var_name);
-    if (!read_value(var))
-    {
-        return 0;
-    }
-
-    if (var < 1 || var > 10)
-    {
-        std::cout << std::format("Value {} must be between 1 and 10.\n", var_name);
-        return 0;
-    }
-    return 1;
-}
-
-void multiply(int** a, int** b, int** c, int n, int threads_num)
-{
-#pragma omp parallel for num_threads(threads_num) schedule(static)
+#pragma omp parallel for num_threads(threads_num) schedule(guided)
     for (int i = 0; i < n; ++i)
     {
         for (int j = 0; j < n; ++j)
@@ -103,7 +104,7 @@ int main()
     if (!read_var(k, "k")) exit(-1);
 
 
-    int **a, **b, **c;
+    double **a, ** b, ** c;
 
     a = matrix_init(n);
     b = matrix_init(n);
