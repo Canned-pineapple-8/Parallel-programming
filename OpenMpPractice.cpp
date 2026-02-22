@@ -2,28 +2,14 @@
 #include <omp.h>
 #include <format>
 
+#define NUM_THREADS 4
+#define N 10
 
-int main()
+int calc_sum()
 {
-    int total_sum = 0, N, thread_amt;
+    int total_sum = 0;
 
-    /*
-    std::cout << "Enter k: ";
-    std::cin >> thread_amt;
-
-    std::cout << "Enter N: ";
-    std::cin >> N;
-
-
-    if (N < 0 || thread_amt < 1)
-    {
-        std::cout << "N must be non-negative, k must be at least 1.\n";
-        exit(-1);
-    }
-    */
-    N = 10; thread_amt = 4;
-
-#pragma omp parallel num_threads(thread_amt) reduction(+:total_sum)
+#pragma omp parallel num_threads(NUM_THREADS) reduction(+:total_sum)
     {
         int thread_number = omp_get_thread_num();
 
@@ -39,6 +25,12 @@ int main()
     }
 
     std::cout << std::format("Sum = {}\n", total_sum);
+    return total_sum;
 
-    return 0;
+}
+
+int main()
+{
+    int total_sum = calc_sum();
+    std::cout << std::format("Sum = {}\n", total_sum);
 }
