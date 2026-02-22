@@ -2,30 +2,36 @@
 #include <omp.h>
 #include <format>
 #include <string>
+#include <Windows.h>
 
-int read_value(int& val)
+template<typename T>
+int read_value(T& val)
 {
     if (!(std::cin >> val))
     {
-        std::cout << "Invalid input.";
+        std::cout << "Invalid input.\n";
+        std::cin.clear();
         return 0;
     }
     return 1;
 }
 
-int read_var(int& var, std::string var_name, int lower_bound = 1, int upper_bound = 10)
+template<typename T>
+int read_var(T& var, std::string name, T lower_bound = (T)0, T upper_bound = T(1e9))
 {
-    std::cout << std::format("Enter {}: ", var_name);
+    std::cout << std::format("Enter {}: ", name);
+
     if (!read_value(var))
-    {
-        return 0;
-    }
+        return false;
 
     if (var < lower_bound || var > upper_bound)
     {
-        std::cout << std::format("Value {} must be between {} and {}.\n", var_name, lower_bound, upper_bound);
+        std::cout << std::format(
+            "Value {} must be between {} and {}.\n",
+            name, lower_bound, upper_bound);
         return 0;
     }
+
     return 1;
 }
 
@@ -37,16 +43,19 @@ void sections(int threads_num)
         {
 #pragma omp section
             {
+                Sleep(1000);
                 std::cout << std::format("[{}]: came in section {}\n", omp_get_thread_num(), 1);
             }
 
 #pragma omp section
             {
+                Sleep(1000);
                 std::cout << std::format("[{}]: came in section {}\n", omp_get_thread_num(), 2);
             }
 
 #pragma omp section
             {
+                Sleep(1000);
                 std::cout << std::format("[{}]: came in section {}\n", omp_get_thread_num(), 3);
             }
         }
