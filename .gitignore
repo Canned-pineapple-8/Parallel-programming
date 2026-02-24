@@ -1,0 +1,62 @@
+# =========================
+# Visual Studio
+# =========================
+
+.vs/
+*.VC.db
+*.VC.opendb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Build results
+# =========================
+
+Debug/
+Release/
+x64/
+x86/
+build/
+ipch/
+
+*.obj
+*.pch
+*.pdb
+*.ilk
+*.idb
+*.tlog
+*.log
+*.lastbuildstate
+
+# =========================
+# CMake
+# =========================
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# =========================
+# Visual Studio Code
+# =========================
+
+.vscode/
+
+# =========================
+# Windows
+# =========================
+
+Thumbs.db
+Desktop.ini
+
+# =========================
+# Executables
+# =========================
+
+*.exe
+*.dll
+*.lib
+*.exp
