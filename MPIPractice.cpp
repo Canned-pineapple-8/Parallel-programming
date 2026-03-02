@@ -3,21 +3,52 @@
 #include <format>
 #include <cstring>
 
-void send_message(const char * msg, int len, int recipient)
+int check_processes_num(int current_num, int min_num = 2)
 {
-    MPI_Send(&len, 1, MPI_INT, recipient, 0, MPI_COMM_WORLD);
-    MPI_Send(msg, len, MPI_CHAR, recipient, 1, MPI_COMM_WORLD);
+    if (current_num < min_num)
+    {
+        std::cout << std::format("Not enough processes ({}).", current_num);
+        return 0;
+    }
+
+    return 1;
 }
 
-char* receive_message(int sender)
+void send_message(int msg, int recipient)
 {
-    int len;
-    MPI_Recv(&len, 1, MPI_INT, sender, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Send(&msg, 1, MPI_INT, recipient, 0, MPI_COMM_WORLD);
+}
 
-    char* buffer = new char[len];
-    MPI_Recv(buffer, len, MPI_CHAR, sender, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+int receive_message(int sender)
+{
+    int msg;
+    MPI_Recv(&msg, 1, MPI_INT, sender, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    return buffer;
+    return msg;
+}
+
+void baton(int processes_num)
+{
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank == 0)
+    {
+        int msg = 0;
+        send_message(msg, rank + 1);
+
+        msg = receive_message(processes_num - 1);
+        std::cout << std::format("[{}]: receive message '{}'", rank, msg++) << std::endl;
+    }
+    else
+    {
+        int msg = receive_message(rank - 1);
+        std::cout << std::format("[{}]: receive message '{}'", rank, msg++) << std::endl;
+
+        int recipient = rank == processes_num - 1 ? 0 : rank + 1;
+
+        send_message(msg, recipient);
+    }
 }
 
 int main(int argc, char* argv[])
@@ -27,29 +58,9 @@ int main(int argc, char* argv[])
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    if (size < 2)
-    {
-        std::cout << std::format("Not enough processes ({}).", size);
-        return 0;
-    }
+    if (!check_processes_num(size)) return 0;
 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (rank == 0)
-    {
-        const char* message = "Hello from process 0!";
-        int len = std::strlen(message);
-
-        send_message(message, len + 1, 1);
-    }
-    else if (rank == 1)
-    {
-        char* message = receive_message(0);
-        std::cout << message << std::endl;
-
-        delete[] message;
-    }
+    baton(size);
 
     MPI_Finalize();
     return 0;
