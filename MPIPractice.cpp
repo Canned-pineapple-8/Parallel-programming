@@ -27,27 +27,22 @@ int receive_message(int sender)
     return msg;
 }
 
-void baton(int processes_num)
+void master_slave(int processes_num)
 {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (rank == 0)
     {
-        int msg = 0;
-        send_message(msg, rank + 1);
-
-        msg = receive_message(processes_num - 1);
-        std::cout << std::format("[{}]: receive message '{}'", rank, msg++) << std::endl;
+        for (int i = rank + 1; i < processes_num; ++i)
+        {
+            int msg = receive_message(i);
+            std::cout << std::format("[{}]: receive message '{}'", rank, msg++) << std::endl;
+        }
     }
     else
     {
-        int msg = receive_message(rank - 1);
-        std::cout << std::format("[{}]: receive message '{}'", rank, msg++) << std::endl;
-
-        int recipient = rank == processes_num - 1 ? 0 : rank + 1;
-
-        send_message(msg, recipient);
+        send_message(rank, 0);
     }
 }
 
@@ -60,7 +55,7 @@ int main(int argc, char* argv[])
 
     if (!check_processes_num(size)) return 0;
 
-    baton(size);
+    master_slave(size);
 
     MPI_Finalize();
     return 0;
