@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     if (size < 2)
     {
         std::cout << std::format("Not enough processes ({}).", size);
+        MPI_Finalize();
         return 0;
     }
 
