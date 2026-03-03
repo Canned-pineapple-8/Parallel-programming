@@ -58,7 +58,11 @@ int main(int argc, char* argv[])
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    if (!check_processes_num(size)) return 0;
+    if (!check_processes_num(size))
+    {   
+        MPI_Finalize();
+        return 0;
+    }
 
     baton(size);
 
