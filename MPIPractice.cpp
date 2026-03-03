@@ -28,11 +28,10 @@ char* receive_message(int sender, MPI_Request* requests)
 {
     int len;
     MPI_Irecv(&len, 1, MPI_INT, sender, 0, MPI_COMM_WORLD, requests);
+    MPI_Wait(requests, MPI_STATUS_IGNORE);
 
     char* buffer = new char[len];
     MPI_Irecv(buffer, len, MPI_CHAR, sender, 1, MPI_COMM_WORLD, requests + 1);
-
-    MPI_Wait(requests, MPI_STATUS_IGNORE);
     MPI_Wait(requests + 1, MPI_STATUS_IGNORE);
 
     return buffer;
@@ -45,12 +44,16 @@ int main(int argc, char* argv[])
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    if (!check_processes_num(size)) return 0;
+    if (!check_processes_num(size))
+    {
+        MPI_Finalize();
+        return 0;
+    }
 
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    MPI_Request* reqs = new MPI_Request[2];
+    MPI_Request reqs[2];
 
     if (rank == 0)
     {
