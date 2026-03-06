@@ -14,27 +14,39 @@ int check_processes_num(int current_num, int min_num = 2)
     return 1;
 }
 
-
-void send_message(const char * msg, int len, int recipient, MPI_Request* requests)
+void send_message(int* msg, int recipient, MPI_Request* request)
 {
-    MPI_Isend(&len, 1, MPI_INT, recipient, 0, MPI_COMM_WORLD, requests);
-    MPI_Isend(msg, len, MPI_CHAR, recipient, 1, MPI_COMM_WORLD, requests + 1);
-
-    MPI_Wait(requests, MPI_STATUS_IGNORE);
-    MPI_Wait(requests + 1, MPI_STATUS_IGNORE);
+    MPI_Isend(msg, 1, MPI_INT, recipient, 0, MPI_COMM_WORLD, request);
 }
 
-char* receive_message(int sender, MPI_Request* requests)
+void receive_message(int* msg, int sender, MPI_Request* request)
 {
-    int len;
-    MPI_Irecv(&len, 1, MPI_INT, sender, 0, MPI_COMM_WORLD, requests);
-    MPI_Wait(requests, MPI_STATUS_IGNORE);
+    MPI_Irecv(msg, 1, MPI_INT, sender, 0, MPI_COMM_WORLD, request);
+}
 
-    char* buffer = new char[len];
-    MPI_Irecv(buffer, len, MPI_CHAR, sender, 1, MPI_COMM_WORLD, requests + 1);
-    MPI_Wait(requests + 1, MPI_STATUS_IGNORE);
+void broadcast(int rank, int size)
+{
+    MPI_Request* reqs = new MPI_Request[(size - 1) * 2];
+    int* received_messages = new int[size - 1];
+    int msg_index = 0, req_index = 0;
 
-    return buffer;
+    for (int rank_i = 0; rank_i < size; ++rank_i)
+    {
+        if (rank == rank_i) continue;
+
+        send_message(&rank, rank_i, reqs + req_index++);
+        receive_message(received_messages + msg_index++, rank_i, reqs + req_index++);
+    }
+
+    MPI_Waitall((size - 1) * 2, reqs, MPI_STATUSES_IGNORE);
+
+    for (size_t i = 0; i < msg_index; ++i)
+    {
+        std::cout << std::format("[{}]: receive message '{}' from process {}\n", rank, received_messages[i], received_messages[i]);
+    }
+
+    delete[] reqs;
+    delete[] received_messages;
 }
 
 int main(int argc, char* argv[])
@@ -53,23 +65,9 @@ int main(int argc, char* argv[])
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    MPI_Request reqs[2];
-
-    if (rank == 0)
-    {
-        const char* message = "Hello from process 0!";
-        int len = std::strlen(message);
-
-        send_message(message, len + 1, 1, reqs);
-    }
-    else if (rank == 1)
-    {
-        char* message = receive_message(0, reqs);
-        std::cout << message << std::endl;
-
-        delete[] message;
-    }
+    broadcast(rank, size);
 
     MPI_Finalize();
+
     return 0;
 }
